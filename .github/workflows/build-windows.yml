@@ -1,49 +1,27 @@
-name: Build FM26 AI Manager Portable
-
+name: Build FM26 AI Manager V1.5
 on:
   workflow_dispatch:
   push:
-    branches:
-      - main
-
+    branches: [ main ]
 jobs:
   build-windows:
     runs-on: windows-latest
-
     steps:
-      - name: Checkout source
-        uses: actions/checkout@v4
-
-      - name: Configure CMake
+      - uses: actions/checkout@v4
+      - name: Configure
         run: cmake -S . -B build -A x64
-
-      - name: Build Release
+      - name: Build
         run: cmake --build build --config Release
-
-      - name: Prepare portable package
+      - name: Package portable
         shell: powershell
         run: |
-          New-Item -ItemType Directory -Force -Path portable
-          New-Item -ItemType Directory -Force -Path portable\config
-          New-Item -ItemType Directory -Force -Path portable\data
-          New-Item -ItemType Directory -Force -Path portable\diagnostics
-          New-Item -ItemType Directory -Force -Path portable\logs
-
-          $exe = Get-ChildItem -Path build -Recurse -Filter "FM26_AI_MANAGER.exe" | Select-Object -First 1
-
-          if (-not $exe) {
-            Write-Error "FM26_AI_MANAGER.exe was not generated."
-            exit 1
-          }
-
+          New-Item -ItemType Directory -Force portable, portable\config, portable\data, portable\database, portable\logs, portable\backups | Out-Null
+          $exe = Get-ChildItem build -Recurse -Filter FM26_AI_MANAGER.exe | Select-Object -First 1
+          if (-not $exe) { throw 'FM26_AI_MANAGER.exe not generated' }
           Copy-Item $exe.FullName portable\FM26_AI_MANAGER.exe
           Copy-Item README_PORTABLE.txt portable\README_PORTABLE.txt
-
-          Compress-Archive -Path portable\* -DestinationPath FM26_AI_MANAGER_V0.6_PORTABLE.zip -Force
-
-      - name: Upload portable build
-        uses: actions/upload-artifact@v4
+          Compress-Archive portable\* FM26_AI_MANAGER_V1.5_PORTABLE.zip -Force
+      - uses: actions/upload-artifact@v4
         with:
-          name: FM26_AI_MANAGER_V0.6_PORTABLE
-          path: FM26_AI_MANAGER_V0.6_PORTABLE.zip
-          if-no-files-found: error
+          name: FM26_AI_MANAGER_V1.5_PORTABLE
+          path: FM26_AI_MANAGER_V1.5_PORTABLE.zip
