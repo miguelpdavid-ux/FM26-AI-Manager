@@ -1,17 +1,29 @@
-name: Build FM26 AI Manager V1.6
+name: Build FM26 AI Manager V1.6.1
+
 on:
   workflow_dispatch:
   push:
     branches: [ main ]
+
 jobs:
   build-windows:
     runs-on: windows-latest
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout source
+        uses: actions/checkout@v4
+
       - name: Configure
         run: cmake -S . -B build -A x64
-      - name: Build
+
+      - name: Build Release
         run: cmake --build build --config Release
+
+      - name: Prepare source manifest
+        shell: powershell
+        run: |
+          Get-FileHash FM26_AI_MANAGER.cpp -Algorithm SHA256 | Format-List | Out-File SOURCE_SHA256.txt
+          Get-FileHash build\Release\FM26_AI_MANAGER.exe -Algorithm SHA256 | Format-List | Out-File BINARY_SHA256.txt
+
       - name: Package portable
         shell: powershell
         run: |
@@ -20,8 +32,13 @@ jobs:
           if (-not $exe) { throw 'FM26_AI_MANAGER.exe not generated' }
           Copy-Item $exe.FullName portable\FM26_AI_MANAGER.exe
           Copy-Item README_PORTABLE.txt portable\README_PORTABLE.txt
-          Compress-Archive portable\* FM26_AI_MANAGER_V1.6_PORTABLE.zip -Force
-      - uses: actions/upload-artifact@v4
+          Copy-Item SOURCE_SHA256.txt portable\SOURCE_SHA256.txt
+          Copy-Item BINARY_SHA256.txt portable\BINARY_SHA256.txt
+          Compress-Archive portable\* FM26_AI_MANAGER_V1.6.1_PORTABLE.zip -Force
+
+      - name: Upload portable build
+        uses: actions/upload-artifact@v4
         with:
-          name: FM26_AI_MANAGER_V1.6_PORTABLE
-          path: FM26_AI_MANAGER_V1.6_PORTABLE.zip
+          name: FM26_AI_MANAGER_V1.6.1_PORTABLE
+          path: FM26_AI_MANAGER_V1.6.1_PORTABLE.zip
+          if-no-files-found: error
