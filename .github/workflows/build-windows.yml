@@ -1,0 +1,49 @@
+name: Build FM26 AI Manager Portable
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - main
+
+jobs:
+  build-windows:
+    runs-on: windows-latest
+
+    steps:
+      - name: Checkout source
+        uses: actions/checkout@v4
+
+      - name: Configure CMake
+        run: cmake -S . -B build -A x64
+
+      - name: Build Release
+        run: cmake --build build --config Release
+
+      - name: Prepare portable package
+        shell: powershell
+        run: |
+          New-Item -ItemType Directory -Force -Path portable
+          New-Item -ItemType Directory -Force -Path portable\config
+          New-Item -ItemType Directory -Force -Path portable\data
+          New-Item -ItemType Directory -Force -Path portable\diagnostics
+          New-Item -ItemType Directory -Force -Path portable\logs
+
+          $exe = Get-ChildItem -Path build -Recurse -Filter "FM26_AI_MANAGER.exe" | Select-Object -First 1
+
+          if (-not $exe) {
+            Write-Error "FM26_AI_MANAGER.exe was not generated."
+            exit 1
+          }
+
+          Copy-Item $exe.FullName portable\FM26_AI_MANAGER.exe
+          Copy-Item README_PORTABLE.txt portable\README_PORTABLE.txt
+
+          Compress-Archive -Path portable\* -DestinationPath FM26_AI_MANAGER_V0.6_PORTABLE.zip -Force
+
+      - name: Upload portable build
+        uses: actions/upload-artifact@v4
+        with:
+          name: FM26_AI_MANAGER_V0.6_PORTABLE
+          path: FM26_AI_MANAGER_V0.6_PORTABLE.zip
+          if-no-files-found: error
