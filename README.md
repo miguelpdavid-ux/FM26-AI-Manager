@@ -1,15 +1,14 @@
-# FM26 AI Manager V1
-Portable Windows-native foundation for an FM26 visual management agent.
+# FM26 AI Manager V1.5
 
-## V1 foundation included
-- automatic FM26 window/session detection (no per-save profile required)
-- continuous capture loop and change detection
-- professional dark dashboard
-- 25% Assist / 60% Copilot / 100% Autonomous policy controls
-- persistent selected control level
-- emergency stop
-- local logs/data/database/backups directories
-- safety-gated action architecture
-- GitHub Actions x64 portable build
+Professional portable Windows control center for the FM26 AI Manager project.
 
-The manager is designed to rebuild context whenever the active FM26 session/save changes. Club-specific decisions must be derived from the currently observed save rather than hard-coded club profiles.
+## V1.5 foundation
+- redesigned layered dashboard
+- multilingual UI: PT-PT / EN / FR / IT / ES
+- persistent 25% / 60% / 100% autonomy policies
+- automatic FM26 session detection
+- continuous visual capture
+- Tactical AI panel and save-aware architecture
+- Emergency Stop and Save Guard
+
+This build is the UI/architecture foundation. High-risk game input remains safety-gated until each executor is validated against FM26.
