@@ -1,17 +1,18 @@
-# FM26 AI Manager V1.6
+# FM26 AI Manager V1.6.1
 
-V1.6 introduces the first real Automation Core on top of the V1.5 dashboard.
+Safety-focused source revision of the automation core.
 
-## Included
-- FM26 process/window detection and continuous capture
-- more stable perceptual frame fingerprinting
-- 25 / 60 / 100 autonomy policies
-- first autonomous executor in 100% mode: conservative Continue/Advance cycle
-- action verification: the engine checks for a visible FM26 state change after acting
-- safe retry when no response is detected
-- global Emergency Stop: **Ctrl+Shift+F12** even when FM26 has focus
-- five UI languages: PT-PT, EN, FR, IT, ES
-- Tactical AI / Save Intelligence architecture preserved for the next semantic layer
+## Changes from V1.6
+- Removed global Ctrl+Shift+F12 hotkey registration.
+- Removed `SendInput`, global keyboard injection and forced foreground switching.
+- The first autonomous executor addresses only the detected Football Manager 2026 window using targeted Win32 window messages.
+- If FM26 is minimized, missing or unresponsive, the executor refuses to act.
+- Emergency Stop remains available inside the manager UI.
+- The automation loop still follows observe -> act -> verify; a visible state change is required before an action is counted as verified.
+- GitHub Actions creates SHA-256 manifests for source and executable alongside the portable build.
 
-## Important scope
-The V1.6 executor is deliberately limited. It proves autonomous observation → action → verification, but it is not yet a full transfer/staff/tactics executor. Semantic screen recognition is the next layer before high-risk actions are unlocked.
+## Current scope
+V1.6.1 validates the targeted automation architecture. It is not yet the complete autonomous club manager. Transfers, contracts, staff changes and tactical editing remain safety-gated until semantic screen recognition and their individual executors are implemented and verified.
+
+## Build
+Upload this source tree to the repository and let GitHub Actions build it on `windows-latest`. No local compiler or Python installation is required on the user's PC.

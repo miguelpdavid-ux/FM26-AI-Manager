@@ -1,16 +1,11 @@
-FM26 AI MANAGER V1.6 PORTABLE
+FM26 AI MANAGER V1.6.1 - PORTABLE
 
 1. Open Football Manager 2026 and load a save.
 2. Run FM26_AI_MANAGER.exe.
-3. 25% = recommendations / observation.
-4. 60% = copilot policy (high-risk executors remain locked).
-5. 100% = enables verified autonomous executors currently available.
+3. The app observes the detected FM26 window.
+4. 25% = Assist, 60% = Copilot, 100% = Autonomous policy.
+5. Emergency Stop in the app immediately blocks further AI actions.
 
-V1.6 FIRST EXECUTOR
-The first executor can advance/continue the save after a stable observation period and verifies that the FM26 frame changed. It does NOT yet make transfers, contracts or tactical changes.
+V1.6.1 does not use a global hotkey, does not call SendInput and does not force FM26 into the foreground. Its first executor targets only the detected FM26 window and refuses to act if the game is missing, minimized or unresponsive.
 
-EMERGENCY STOP
-Press Ctrl+Shift+F12 at any time, including while FM26 is focused.
-The red Emergency Stop button also stops automation when the manager window is visible.
-
-No Python or external runtime installation is required on the target PC.
+This is still an automation-core milestone, not the finished autonomous manager. High-impact executors remain locked until verified.

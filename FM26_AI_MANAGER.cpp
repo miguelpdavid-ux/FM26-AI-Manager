@@ -58,13 +58,14 @@ uint64_t hashImg(const Img&i){
     return h;
 }
 bool sendContinueKey(){
-    if(!gFM || !IsWindow(gFM)) return false;
-    if(IsIconic(gFM)) ShowWindow(gFM,SW_RESTORE);
-    SetForegroundWindow(gFM);
-    Sleep(120);
-    INPUT in[2]{}; in[0].type=INPUT_KEYBOARD; in[0].ki.wVk=VK_SPACE;
-    in[1]=in[0]; in[1].ki.dwFlags=KEYEVENTF_KEYUP;
-    return SendInput(2,in,sizeof(INPUT))==2;
+    // V1.6.1 safety: never seize global keyboard/mouse focus and never inject system-wide input.
+    // The action is delivered only to the already-detected FM26 top-level window.
+    if(!gFM || !IsWindow(gFM) || IsIconic(gFM)) return false;
+    DWORD_PTR result=0;
+    LRESULT down=SendMessageTimeoutW(gFM,WM_KEYDOWN,VK_SPACE,1,SMTO_ABORTIFHUNG|SMTO_BLOCK,750,&result);
+    if(!down) return false;
+    LRESULT up=SendMessageTimeoutW(gFM,WM_KEYUP,VK_SPACE,(LPARAM)(1u<<30 | 1u<<31),SMTO_ABORTIFHUNG|SMTO_BLOCK,750,&result);
+    return up!=0;
 }
 void automationTick(uint64_t hh){
     if(emergency || !running || controlLevel!=100 || !gFM){
@@ -113,13 +114,12 @@ case WM_CREATE:{dirs();loadPrefs();fontBrand=CreateFontW(38,0,0,0,FW_HEAVY,0,0,0
  label(h,L"LIVE INTELLIGENCE",270,310,220,24,fontHead);label(h,L"CAPTURES",285,353,150,20,fontSmall);label(h,L"STATE CHANGES",535,353,150,20,fontSmall);label(h,L"FRAME",785,353,150,20,fontSmall);hMetric1=label(h,L"0",285,382,180,40,fontMetric);hMetric2=label(h,L"0",535,382,180,40,fontMetric);hMetric3=label(h,L"—",785,382,220,40,fontMetric);
  label(h,L"SYSTEM",1040,330,150,22,fontHead);label(h,L"VISION",1040,365,90,20,fontSmall);hVision=label(h,L"● IDLE",1130,365,100,20,fontSmall);label(h,L"DECISION AI",1040,395,90,20,fontSmall);hAI=label(h,L"● ACTIVE",1130,395,100,20,fontSmall);label(h,L"SAVE GUARD",1040,425,90,20,fontSmall);hGuard=label(h,L"● ACTIVE",1130,425,100,20,fontSmall);
  label(h,L"TACTICAL AI",270,485,220,24,fontHead);hTactical=label(h,L"",270,520,720,54,fontBody); label(h,L"AUTOMATION ENGINE",1000,485,190,24,fontHead); hAutoState=label(h,L"LOCKED",1000,520,210,24,fontHead); hAutoStats=label(h,L"Attempts 0  •  Verified 0",1000,548,210,22,fontSmall);label(h,L"AI ACTIVITY",270,625,180,24,fontHead);hActivity=label(h,L"Manager core ready. Waiting for save intelligence.",270,660,920,50,fontBody);
- label(h,L"V1.6  •  AUTOMATION CORE  •  MULTILINGUAL  •  SAVE-AWARE",270,740,700,22,fontSmall);applyLanguage();SetTimer(h,1,500,nullptr);RegisterHotKey(h,1,MOD_CONTROL|MOD_SHIFT,VK_F12); logLine(L"V1.6 started");return 0;}
+ label(h,L"V1.6.1  •  TARGETED AUTOMATION  •  MULTILINGUAL  •  SAVE-AWARE",270,740,700,22,fontSmall);applyLanguage();SetTimer(h,1,500,nullptr);logLine(L"V1.6.1 started - targeted FM26 messaging only");return 0;}
 case WM_TIMER:updateSession();return 0;
-case WM_HOTKEY: if(w==1){ emergency=true; running=false; awaitingVerify=false; stableTicks=0; setText(hAI,L"● STOPPED"); setText(hVision,L"● STOPPED"); setText(hAutoState,L"EMERGENCY STOP"); logLine(L"Global emergency stop CTRL+SHIFT+F12"); } return 0;
 case WM_COMMAND:{int id=LOWORD(w);if(id==ID_ASSIST||id==ID_COPILOT||id==ID_AUTO){chooseMode(id);return 0;}if(id==ID_STOP){emergency=true;running=false;awaitingVerify=false;stableTicks=0;setText(hAI,L"● STOPPED");setText(hVision,L"● STOPPED");setText(hActivity,tr(L"PARAGEM DE EMERGÊNCIA ativa. Todo o controlo da IA foi bloqueado.",L"EMERGENCY STOP active. All AI control is blocked.",L"ARRÊT D'URGENCE actif. Tout contrôle IA est bloqué.",L"ARRESTO DI EMERGENZA attivo. Tutto il controllo IA è bloccato.",L"PARADA DE EMERGENCIA activa. Todo el control IA está bloqueado."));return 0;}if(id==ID_LANG&&HIWORD(w)==CBN_SELCHANGE){language=(int)SendMessageW(hLang,CB_GETCURSEL,0,0);applyLanguage();return 0;}if(id>=ID_NAV0&&id<ID_NAV0+8){activePage=id-ID_NAV0;InvalidateRect(h,nullptr,FALSE);return 0;}return 0;}
 case WM_DRAWITEM:{auto*d=(DRAWITEMSTRUCT*)l;int id=(int)d->CtlID;bool mode=(id==controlLevel&&!emergency), nav=(id>=ID_NAV0&&id<ID_NAV0+8), navActive=nav&&(id-ID_NAV0==activePage);COLORREF fill=id==ID_STOP?RGB(96,31,43):(mode?RGB(27,101,185):(navActive?RGB(25,65,108):RGB(18,29,46)));HBRUSH br=CreateSolidBrush(fill);HPEN pen=CreatePen(PS_SOLID,1,(mode||navActive)?ACCENT:RGB(42,58,79));auto ob=SelectObject(d->hDC,br);auto op=SelectObject(d->hDC,pen);RoundRect(d->hDC,d->rcItem.left,d->rcItem.top,d->rcItem.right,d->rcItem.bottom,12,12);SelectObject(d->hDC,ob);SelectObject(d->hDC,op);DeleteObject(br);DeleteObject(pen);SetBkMode(d->hDC,TRANSPARENT);SetTextColor(d->hDC,TEXT);wchar_t t[128]{};GetWindowTextW(d->hwndItem,t,127);RECT rr=d->rcItem;DrawTextW(d->hDC,t,-1,&rr,DT_CENTER|DT_VCENTER|DT_SINGLELINE);return TRUE;}
 case WM_CTLCOLORSTATIC:{HDC dc=(HDC)w;SetBkMode(dc,TRANSPARENT);SetTextColor(dc,TEXT);return (LRESULT)GetStockObject(NULL_BRUSH);}
 case WM_ERASEBKGND:{HDC dc=(HDC)w;RECT r;GetClientRect(h,&r);TRIVERTEX v[2]={{0,0,(COLOR16)(8<<8),(COLOR16)(15<<8),(COLOR16)(27<<8),0},{r.right,r.bottom,(COLOR16)(15<<8),(COLOR16)(31<<8),(COLOR16)(48<<8),0}};GRADIENT_RECT gr={0,1};GradientFill(dc,v,2,&gr,1,GRADIENT_FILL_RECT_V);roundRect(dc,{250,120,r.right-20,r.bottom-25},RGB(13,23,38),24);roundRect(dc,{265,295,1015,455},RGB(17,31,50),18);roundRect(dc,{1025,295,r.right-35,455},RGB(17,31,50),18);roundRect(dc,{265,470,r.right-35,590},RGB(17,31,50),18);roundRect(dc,{265,610,r.right-35,725},RGB(17,31,50),18);return 1;}
-case WM_DESTROY:UnregisterHotKey(h,1);KillTimer(h,1);for(auto f:{fontBrand,fontTitle,fontHead,fontBody,fontSmall,fontMetric})if(f)DeleteObject(f);if(bgBrush)DeleteObject(bgBrush);PostQuitMessage(0);return 0;}
+case WM_DESTROY:KillTimer(h,1);for(auto f:{fontBrand,fontTitle,fontHead,fontBody,fontSmall,fontMetric})if(f)DeleteObject(f);if(bgBrush)DeleteObject(bgBrush);PostQuitMessage(0);return 0;}
 return DefWindowProcW(h,m,w,l);}
-int WINAPI wWinMain(HINSTANCE inst,HINSTANCE,LPWSTR,int show){auto dpi=(BOOL(WINAPI*)())GetProcAddress(GetModuleHandleW(L"user32.dll"),"SetProcessDPIAware");if(dpi)dpi();WNDCLASSW wc{};wc.lpfnWndProc=WndProc;wc.hInstance=inst;wc.lpszClassName=L"FM26AIV16";wc.hCursor=LoadCursor(nullptr,IDC_ARROW);RegisterClassW(&wc);HWND h=CreateWindowW(wc.lpszClassName,L"FM26 AI Manager V1.6",WS_OVERLAPPED|WS_CAPTION|WS_SYSMENU|WS_MINIMIZEBOX,CW_USEDEFAULT,CW_USEDEFAULT,1280,820,nullptr,nullptr,inst,nullptr);ShowWindow(h,show);UpdateWindow(h);MSG msg{};while(GetMessageW(&msg,nullptr,0,0)){TranslateMessage(&msg);DispatchMessageW(&msg);}return 0;}
+int WINAPI wWinMain(HINSTANCE inst,HINSTANCE,LPWSTR,int show){auto dpi=(BOOL(WINAPI*)())GetProcAddress(GetModuleHandleW(L"user32.dll"),"SetProcessDPIAware");if(dpi)dpi();WNDCLASSW wc{};wc.lpfnWndProc=WndProc;wc.hInstance=inst;wc.lpszClassName=L"FM26AIV161";wc.hCursor=LoadCursor(nullptr,IDC_ARROW);RegisterClassW(&wc);HWND h=CreateWindowW(wc.lpszClassName,L"FM26 AI Manager V1.6.1",WS_OVERLAPPED|WS_CAPTION|WS_SYSMENU|WS_MINIMIZEBOX,CW_USEDEFAULT,CW_USEDEFAULT,1280,820,nullptr,nullptr,inst,nullptr);ShowWindow(h,show);UpdateWindow(h);MSG msg{};while(GetMessageW(&msg,nullptr,0,0)){TranslateMessage(&msg);DispatchMessageW(&msg);}return 0;}
