@@ -1,10 +1,15 @@
-# FM26 AI Manager V0.6
-Portable Windows diagnostic foundation for the FM26 AI Manager project.
+# FM26 AI Manager V1
+Portable Windows-native foundation for an FM26 visual management agent.
 
-## Build
-GitHub Actions builds a native x64 Windows executable with the static MSVC runtime and packages it as `FM26_AI_MANAGER_V0.6_PORTABLE.zip`.
+## V1 foundation included
+- automatic FM26 window/session detection (no per-save profile required)
+- continuous capture loop and change detection
+- professional dark dashboard
+- 25% Assist / 60% Copilot / 100% Autonomous policy controls
+- persistent selected control level
+- emergency stop
+- local logs/data/database/backups directories
+- safety-gated action architecture
+- GitHub Actions x64 portable build
 
-Run **Actions → Build FM26 AI Manager Portable → Run workflow**, then download the artifact.
-
-## Current safety boundary
-V0.6 is read-only: FM26 window detection, screen capture, basic screen training/classification, decision dry-run and diagnostic export. No mouse/keyboard automation and no save modification.
+The manager is designed to rebuild context whenever the active FM26 session/save changes. Club-specific decisions must be derived from the currently observed save rather than hard-coded club profiles.
