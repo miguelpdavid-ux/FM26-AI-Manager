@@ -1,4 +1,4 @@
-name: Build FM26 AI Manager V1.5
+name: Build FM26 AI Manager V1.6
 on:
   workflow_dispatch:
   push:
@@ -20,8 +20,8 @@ jobs:
           if (-not $exe) { throw 'FM26_AI_MANAGER.exe not generated' }
           Copy-Item $exe.FullName portable\FM26_AI_MANAGER.exe
           Copy-Item README_PORTABLE.txt portable\README_PORTABLE.txt
-          Compress-Archive portable\* FM26_AI_MANAGER_V1.5_PORTABLE.zip -Force
+          Compress-Archive portable\* FM26_AI_MANAGER_V1.6_PORTABLE.zip -Force
       - uses: actions/upload-artifact@v4
         with:
-          name: FM26_AI_MANAGER_V1.5_PORTABLE
-          path: FM26_AI_MANAGER_V1.5_PORTABLE.zip
+          name: FM26_AI_MANAGER_V1.6_PORTABLE
+          path: FM26_AI_MANAGER_V1.6_PORTABLE.zip
